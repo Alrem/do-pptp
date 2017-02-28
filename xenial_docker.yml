@@ -25,6 +25,7 @@
         - arping
         - python-pip
         - virtualenv
+        - fail2ban
       become: yes
 
     - name: Install ansible docker requiremens
