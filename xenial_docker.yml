@@ -1,0 +1,36 @@
+- hosts: xenials
+  #gather_facts: False
+  tasks:
+    - name:  Add the GPG key for the official Docker repository
+      apt_key: keyserver=p80.pool.sks-keyservers.net id=58118E89F3A912897C070ADBF76221572C52609D
+
+    - name: Add the Docker repository to APT sources
+      apt_repository: repo='deb https://apt.dockerproject.org/repo ubuntu-xenial main' state=present
+
+    - name: update software
+      apt: update_cache=yes upgrade=dist
+      become: yes
+
+    - name: Install Docker
+      apt: name=docker-engine state=present update_cache=yes
+      notify: Restart Docker
+
+    - name: Install software
+      apt: name={{ item }} state=present update_cache=yes
+      with_items:
+        - ncdu
+        - vim
+        - ethtool
+        - nmap
+        - arping
+        - python-pip
+        - virtualenv
+      become: yes
+
+    - name: Install ansible docker requiremens
+      pip:
+        name: docker-py
+
+  handlers:
+    - name: Restart Docker
+      systemd: state=restarted name=docker

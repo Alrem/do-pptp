@@ -1,0 +1,35 @@
+- hosts: xenials
+  tasks:
+
+    - name: Upload chap-secrets file
+      copy:
+        src: chap-secrets
+        dest: /etc/ppp/chap-secrets
+        owner: root
+        group: root
+        mode: 0600
+        backup: yes
+
+    - name: Add kernel module for pptpd
+      lineinfile: dest=/etc/modules state=present backup=yes line='ip_nat_pptp'
+      become: yes
+      notify: Load the module
+
+    - name: Run docker container with pptpd
+      #raw: docker run --name pptpd --restart=always --privileged -d -p 1723:1723 -v /etc/ppp/chap-secrets:/etc/ppp/chap-secrets:ro whuwxl/pptpd
+      docker_container:
+        name: pptpd
+        restart_policy: always
+        privileged: yes
+        published_ports: 1723:1723
+        image: whuwxl/pptpd
+        volumes: /etc/ppp/chap-secrets:/etc/ppp/chap-secrets:ro
+
+
+
+  handlers:
+    - name: Load the module
+      modprobe:
+        name: ip_nat_pptp
+        state: present
+
